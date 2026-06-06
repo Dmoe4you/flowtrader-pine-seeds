@@ -1,0 +1,78 @@
+//@version=5
+indicator("FlowTrader GEX Levels", overlay=true, max_lines_count=20, max_labels_count=20)
+
+// ── Inputs ─────────────────────────────────────────────────
+grp = "FlowTrader GEX"
+show_call_wall  = input.bool(true,  "Show Call Wall",   group=grp)
+show_put_wall   = input.bool(true,  "Show Put Wall",    group=grp)
+show_flip       = input.bool(true,  "Show Gamma Flip",  group=grp)
+show_secondary  = input.bool(true,  "Show Secondary Walls", group=grp)
+show_net_gex    = input.bool(true,  "Show Net GEX Label", group=grp)
+
+call_col = input.color(color.new(#00e882, 0),  "Call Color", group=grp)
+put_col  = input.color(color.new(#d23cb4, 0),  "Put Color",  group=grp)
+flip_col = input.color(color.new(#e8a928, 0),  "Flip Color", group=grp)
+
+// ── Read Pine Seeds data ───────────────────────────────────
+// Replace FLOWTRADER with your registered provider ID after approval.
+// Before approval, substitute the ticker string with your test symbol.
+
+ticker_prefix = syminfo.prefix == "SPX" or syminfo.ticker == "SPX" or syminfo.ticker == "SPXW" ? "FLOWTRADER:SPX" : "FLOWTRADER:SPY"
+
+call_wall  = request.security(ticker_prefix + "_CALL_WALL",  timeframe.period, close, ignore_invalid_symbol=true)
+put_wall   = request.security(ticker_prefix + "_PUT_WALL",   timeframe.period, close, ignore_invalid_symbol=true)
+gamma_flip = request.security(ticker_prefix + "_GAMMA_FLIP", timeframe.period, close, ignore_invalid_symbol=true)
+call_wall2 = request.security(ticker_prefix + "_CALL_GEX_1", timeframe.period, close, ignore_invalid_symbol=true)
+put_wall2  = request.security(ticker_prefix + "_PUT_GEX_1",  timeframe.period, close, ignore_invalid_symbol=true)
+net_gex_m  = request.security(ticker_prefix + "_NET_GEX",    timeframe.period, close, ignore_invalid_symbol=true)  // in $M
+
+// ── Draw lines ─────────────────────────────────────────────
+// We draw on the last bar only (overlay horizontal lines)
+if barstate.islast
+
+    // Call wall
+    if show_call_wall and not na(call_wall)
+        line.new(bar_index - 300, call_wall, bar_index, call_wall,
+                 color=call_col, width=2, style=line.style_solid, extend=extend.right)
+        label.new(bar_index, call_wall,
+                  "CALL WALL  $" + str.tostring(call_wall, "#.##"),
+                  color=color.new(call_col, 80), textcolor=call_col,
+                  style=label.style_label_left, size=size.small)
+
+    // Put wall
+    if show_put_wall and not na(put_wall)
+        line.new(bar_index - 300, put_wall, bar_index, put_wall,
+                 color=put_col, width=2, style=line.style_solid, extend=extend.right)
+        label.new(bar_index, put_wall,
+                  "PUT WALL  $" + str.tostring(put_wall, "#.##"),
+                  color=color.new(put_col, 80), textcolor=put_col,
+                  style=label.style_label_left, size=size.small)
+
+    // Gamma flip
+    if show_flip and not na(gamma_flip)
+        line.new(bar_index - 300, gamma_flip, bar_index, gamma_flip,
+                 color=flip_col, width=1, style=line.style_dashed, extend=extend.right)
+        label.new(bar_index, gamma_flip,
+                  "γ FLIP  $" + str.tostring(gamma_flip, "#.##"),
+                  color=color.new(flip_col, 80), textcolor=flip_col,
+                  style=label.style_label_left, size=size.small)
+
+    // Secondary walls
+    if show_secondary and not na(call_wall2)
+        line.new(bar_index - 150, call_wall2, bar_index, call_wall2,
+                 color=color.new(call_col, 50), width=1, style=line.style_dotted, extend=extend.right)
+
+    if show_secondary and not na(put_wall2)
+        line.new(bar_index - 150, put_wall2, bar_index, put_wall2,
+                 color=color.new(put_col, 50), width=1, style=line.style_dotted, extend=extend.right)
+
+    // Net GEX regime label (top-right)
+    if show_net_gex and not na(net_gex_m)
+        regime     = net_gex_m >= 0 ? "POSITIVE GEX" : "NEGATIVE GEX"
+        regime_col = net_gex_m >= 0 ? call_col : put_col
+        gex_str    = str.tostring(math.abs(net_gex_m), "#.#") + "M"
+        sign       = net_gex_m >= 0 ? "+" : "-"
+        label.new(bar_index, high * 1.001,
+                  regime + "  " + sign + gex_str,
+                  color=color.new(regime_col, 75), textcolor=regime_col,
+                  style=label.style_label_lower_right, size=size.normal)

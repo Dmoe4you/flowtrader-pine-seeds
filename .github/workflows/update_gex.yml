@@ -1,0 +1,42 @@
+name: Update GEX Levels
+
+on:
+  schedule:
+    # Every 15 minutes Mon–Fri, 9:25 AM – 4:20 PM ET (14:25–21:20 UTC)
+    - cron: "25,40,55 14 * * 1-5"
+    - cron: "10,25,40,55 15,16,17,18,19,20 * * 1-5"
+    - cron: "10,20 21 * * 1-5"
+  workflow_dispatch:  # allow manual trigger
+
+permissions:
+  contents: write  # needed to push updated data files
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Fetch and write GEX levels
+        env:
+          MASSIVE_API_KEY: ${{ secrets.MASSIVE_API_KEY }}
+        run: python scripts/update_gex_levels.py
+
+      - name: Commit and push data
+        run: |
+          git config user.name  "gex-bot"
+          git config user.email "gex-bot@flowtrader.local"
+          git add data/
+          # Only commit if data actually changed
+          git diff --cached --quiet && echo "No changes" || git commit -m "gex update $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push

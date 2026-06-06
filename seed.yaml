@@ -1,0 +1,64 @@
+provider: FLOWTRADER
+name: FlowTrader GEX Levels
+description: Live gamma exposure levels computed from real options chain data. Includes call/put walls, gamma flip, and net GEX for SPY and SPX.
+documentation_url: https://github.com/YOUR_GITHUB_USERNAME/flowtrader-pine-seeds
+update_frequency: 15min
+
+symbols:
+  - id: SPY_CALL_WALL
+    name: SPY Call GEX Wall
+    description: Dominant call gamma exposure strike above spot — acts as resistance/magnet
+    type: price
+    currency: USD
+
+  - id: SPY_PUT_WALL
+    name: SPY Put GEX Wall
+    description: Dominant put gamma exposure strike below spot — acts as support/magnet
+    type: price
+    currency: USD
+
+  - id: SPY_GAMMA_FLIP
+    name: SPY Gamma Flip
+    description: Strike where dealer net gamma crosses zero. Above = positive GEX (dampening), below = negative GEX (amplifying)
+    type: price
+    currency: USD
+
+  - id: SPY_NET_GEX
+    name: SPY Net GEX
+    description: Total net gamma exposure in dollars. Positive = dealers long gamma (mean-reverting). Negative = dealers short gamma (trending/volatile)
+    type: value
+
+  - id: SPY_CALL_GEX_1
+    name: SPY Call Wall 2
+    description: Second-largest call GEX strike above spot
+    type: price
+    currency: USD
+
+  - id: SPY_PUT_GEX_1
+    name: SPY Put Wall 2
+    description: Second-largest put GEX strike below spot
+    type: price
+    currency: USD
+
+  - id: SPX_CALL_WALL
+    name: SPX Call GEX Wall
+    description: Dominant call gamma exposure strike above spot for SPX
+    type: price
+    currency: USD
+
+  - id: SPX_PUT_WALL
+    name: SPX Put GEX Wall
+    description: Dominant put gamma exposure strike below spot for SPX
+    type: price
+    currency: USD
+
+  - id: SPX_GAMMA_FLIP
+    name: SPX Gamma Flip
+    description: SPX gamma flip level
+    type: price
+    currency: USD
+
+  - id: SPX_NET_GEX
+    name: SPX Net GEX
+    description: SPX total net gamma exposure
+    type: value
